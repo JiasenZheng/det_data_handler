@@ -5,11 +5,13 @@ project(det_data_handler)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
   pcl_ros
   realsense2_camera
   rosbag
   roscpp
   rospy
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
