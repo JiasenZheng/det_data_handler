@@ -3,23 +3,35 @@
 """
 This script is used to handle both raw images and point clouds
 TODO:
-1. compute optical flow of images both real-time and offline (bag file)
+1. compute optical flow of images in real time
+2. get stationary image frames
+3. save stationary images to disk
 """
 
+import os
 import cv2
 import rospy
-import rosbag
 import cv_bridge
 import numpy as np
 import matplotlib.pyplot as plt
 from sensor_msgs.msg import Image
-import det_data_handler.utils
+# from det_data_handler.utils import plot_real_time_data
+
 
 class DataHandler():
     def __init__(self,
                  image_topic,
-                 real_time=True,):
+                 real_time=True,
+                 tmp_dir="/tmp/jason",):
+        self.tmp_dir = tmp_dir
+        # create tmp directory if not exist
+        if not os.path.exists(self.tmp_dir):
+            os.makedirs(self.tmp_dir)
         self.image_topic = image_topic
+        self.camera_name = image_topic.split("/")[1]
+        self.img_dir = os.path.join(self.tmp_dir, "train_images")
+        if not os.path.exists(self.img_dir):
+            os.makedirs(self.img_dir)
         self.real_time = real_time
         self.bridge = cv_bridge.CvBridge()
         self.first_image = True
@@ -29,6 +41,10 @@ class DataHandler():
         self.optical_flow_image_pub = rospy.Publisher("/optical_flow_image",
                                                       Image,
                                                       queue_size=1)
+        self.prev_mag_sum = 0.0
+        self.stationary_time = 0.0
+        self.image_stored = False
+        plt.axis([0, 10, 0, 1])
 
     def compute_optical_flow(self, image1, image2):
         """
@@ -56,6 +72,24 @@ class DataHandler():
         """
         self.optical_flow_image_pub.publish(self.bridge.cv2_to_imgmsg(cv_img, "bgr8"))
 
+    def get_stationary_frames(self, image, diff, interval = 1.0):
+        """
+        Get stationary frames
+        """
+        if abs(diff) < 10000:
+            self.stationary_time += 1.0 / 30.0
+        else:
+            self.stationary_time = 0.0
+            self.image_stored = False
+        if self.stationary_time > interval:
+            if not self.image_stored:
+                rospy.loginfo("Stationary frame detected")
+                self.image_stored = True
+                # save image to disk
+                image_name = os.path.join(self.img_dir, "{}_{}.png".format(self.camera_name, rospy.get_time()))
+                cv2.imwrite(image_name, image)
+                rospy.loginfo("Image saved to {}".format(image_name))
+
     def image_callback(self, msg):
         """
         Callback function for image topic
@@ -72,13 +106,19 @@ class DataHandler():
             self.first_image = False
             rospy.loginfo("First image received")
         else:
-            # time the computation of optical flow
-            # start_time = rospy.get_time()
-            _, _, bgr = self.compute_optical_flow(self.prev_image, cv_img)
-            # end_time = rospy.get_time()
-            # rospy.loginfo("Time to compute optical flow: {}".format(end_time - start_time))
+            mag, _, bgr = self.compute_optical_flow(self.prev_image, cv_img)
             self.pub_optical_flow_image(bgr)
             self.prev_image = cv_img
+            # compute the sum of optical flow
+            mag_sum = np.sum(mag)
+            if self.prev_mag_sum == 0.0:
+                self.prev_mag_sum = mag_sum
+            else:
+                # compute the difference of optical flow
+                diff = mag_sum - self.prev_mag_sum
+                self.prev_mag_sum = mag_sum
+                # calculate the time interval of stationary frames
+                self.get_stationary_frames(cv_img, diff)
 
 if __name__ == '__main__':
     rospy.init_node('data_handler_node')
