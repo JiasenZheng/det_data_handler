@@ -73,10 +73,10 @@ class DataHandler():
             rospy.loginfo("First image received")
         else:
             # time the computation of optical flow
-            start_time = rospy.get_time()
+            # start_time = rospy.get_time()
             _, _, bgr = self.compute_optical_flow(self.prev_image, cv_img)
-            end_time = rospy.get_time()
-            rospy.loginfo("Time to compute optical flow: {}".format(end_time - start_time))
+            # end_time = rospy.get_time()
+            # rospy.loginfo("Time to compute optical flow: {}".format(end_time - start_time))
             self.pub_optical_flow_image(bgr)
             self.prev_image = cv_img
 
