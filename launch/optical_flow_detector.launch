@@ -1,0 +1,6 @@
+<launch>
+    <include file="$(find det_data_handler)/launch/d435_bringup.launch">
+        <arg name="use_rviz" value="true"/>
+    </include>
+    <node name="det_data_handler_node" pkg="det_data_handler" type="det_data_handler_node"/>
+</launch>

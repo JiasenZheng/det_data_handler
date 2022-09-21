@@ -1,4 +1,7 @@
 <launch>
+  <arg name="use_rviz"            default="false"/>
+  <arg name="use_sim_time"        default="true"/>
+
   <arg name="serial_no"           default="937422070385"/>
   <arg name="json_file_path"      default=""/>
   <arg name="camera"              default="camera"/>
@@ -102,5 +105,6 @@
       <arg name="allow_no_texture_points"  value="$(arg allow_no_texture_points)"/>
     </include>
   </group>
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find det_data_handler)/config/rviz/camera_view.rviz" required="true"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find det_data_handler)/config/rviz/camera_view.rviz" 
+  required="true" if="$(arg use_rviz)"/>
 </launch>
