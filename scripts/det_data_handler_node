@@ -13,9 +13,7 @@ import cv2
 import rospy
 import cv_bridge
 import numpy as np
-import matplotlib.pyplot as plt
 from sensor_msgs.msg import Image
-# from det_data_handler.utils import plot_real_time_data
 
 class DataHandler():
     def __init__(self,
@@ -41,10 +39,12 @@ class DataHandler():
         self.optical_flow_image_pub = rospy.Publisher(ns + "/optical_flow_image",
                                                       Image,
                                                       queue_size=1)
+        self.captured_image_pub = rospy.Publisher(ns + "/captured_image",
+                                                    Image,
+                                                    queue_size=1)
         self.prev_mag_sum = 0.0
         self.stationary_time = 0.0
         self.image_stored = False
-        plt.axis([0, 10, 0, 1])
 
     def compute_optical_flow(self, image1, image2):
         """
@@ -72,7 +72,13 @@ class DataHandler():
         """
         self.optical_flow_image_pub.publish(self.bridge.cv2_to_imgmsg(cv_img, "bgr8"))
 
-    def get_stationary_frames(self, image, diff, interval = 1.0):
+    def pub_captured_image(self, cv_img):
+        """
+        Publish captured image
+        """
+        self.captured_image_pub.publish(self.bridge.cv2_to_imgmsg(cv_img, "bgr8"))
+
+    def get_stationary_frames(self, image, diff, interval = 0.25):
         """
         Get stationary frames
         """
@@ -87,6 +93,7 @@ class DataHandler():
                 self.image_stored = True
                 # save image to disk
                 image_name = os.path.join(self.img_dir, "{}_{}.png".format(self.camera_name, rospy.get_time()))
+                self.pub_captured_image(image)
                 cv2.imwrite(image_name, image)
                 rospy.loginfo("Image saved to {}".format(image_name))
 
@@ -122,7 +129,6 @@ class DataHandler():
 
 if __name__ == '__main__':
     rospy.init_node('data_handler_node')
-    # get namespace
     ns = rospy.get_namespace()
     image_topic = ns + "/" + ns + "/color/image_raw"
     data_handler = DataHandler(image_topic)
