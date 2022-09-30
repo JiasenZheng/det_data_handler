@@ -17,12 +17,11 @@ import matplotlib.pyplot as plt
 from sensor_msgs.msg import Image
 # from det_data_handler.utils import plot_real_time_data
 
-
 class DataHandler():
     def __init__(self,
                  image_topic,
                  real_time=True,
-                 tmp_dir="/tmp/jason",):
+                 tmp_dir="/tmp/detection",):
         self.tmp_dir = tmp_dir
         # create tmp directory if not exist
         if not os.path.exists(self.tmp_dir):
@@ -38,7 +37,8 @@ class DataHandler():
         self.image_sub = rospy.Subscriber(self.image_topic,
                                           Image,
                                           self.image_callback)
-        self.optical_flow_image_pub = rospy.Publisher("/optical_flow_image",
+        ns = rospy.get_namespace()
+        self.optical_flow_image_pub = rospy.Publisher(ns + "/optical_flow_image",
                                                       Image,
                                                       queue_size=1)
         self.prev_mag_sum = 0.0
@@ -122,6 +122,8 @@ class DataHandler():
 
 if __name__ == '__main__':
     rospy.init_node('data_handler_node')
-    image_topic = "/camera/color/image_raw"
+    # get namespace
+    ns = rospy.get_namespace()
+    image_topic = ns + "/" + ns + "/color/image_raw"
     data_handler = DataHandler(image_topic)
     rospy.spin()
