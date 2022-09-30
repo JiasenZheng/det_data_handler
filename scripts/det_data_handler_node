@@ -18,7 +18,6 @@ from sensor_msgs.msg import Image
 class DataHandler():
     def __init__(self,
                  image_topic,
-                 real_time=True,
                  tmp_dir="/tmp/detection",):
         self.tmp_dir = tmp_dir
         # create tmp directory if not exist
@@ -29,7 +28,9 @@ class DataHandler():
         self.img_dir = os.path.join(self.tmp_dir, "train_images")
         if not os.path.exists(self.img_dir):
             os.makedirs(self.img_dir)
-        self.real_time = real_time
+        # clear images in tmp directory
+        for file in os.listdir(self.img_dir):
+            os.remove(os.path.join(self.img_dir, file))
         self.bridge = cv_bridge.CvBridge()
         self.first_image = True
         self.image_sub = rospy.Subscriber(self.image_topic,
