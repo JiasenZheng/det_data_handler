@@ -22,5 +22,6 @@
         <node name="det_data_handler_node" pkg="det_data_handler" type="det_data_handler_node" output="screen"/>
     </group>
 
-    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args ="--perspective-file $(find det_data_handler)/config/rqt/optical_flow_multi_cams.perspective"/>
+    <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args =
+    "--perspective-file $(find det_data_handler)/config/rqt/optical_flow_multi_cams.perspective"/>
 </launch>
