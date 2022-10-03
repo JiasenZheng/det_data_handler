@@ -6,6 +6,7 @@ TODO:
 1. compute optical flow of images in real time
 2. get stationary image frames
 3. save stationary images to disk
+4. set max number of images to save
 """
 
 import os
@@ -18,13 +19,15 @@ from sensor_msgs.msg import Image
 class DataHandler():
     def __init__(self,
                  image_topic,
-                 tmp_dir="/tmp/detection",):
+                 tmp_dir="/tmp/detection",
+                 max_images=50):
         self.tmp_dir = tmp_dir
         # create tmp directory if not exist
         if not os.path.exists(self.tmp_dir):
             os.makedirs(self.tmp_dir)
         self.image_topic = image_topic
         self.camera_name = image_topic.split("/")[1]
+        self.max_images = max_images
         self.img_dir = os.path.join(self.tmp_dir, "train_images")
         if not os.path.exists(self.img_dir):
             os.makedirs(self.img_dir)
@@ -33,6 +36,7 @@ class DataHandler():
             os.remove(os.path.join(self.img_dir, file))
         self.bridge = cv_bridge.CvBridge()
         self.first_image = True
+        self.first_save = True
         self.image_sub = rospy.Subscriber(self.image_topic,
                                           Image,
                                           self.image_callback)
@@ -95,8 +99,15 @@ class DataHandler():
                 # save image to disk
                 image_name = os.path.join(self.img_dir, "{}_{}.png".format(self.camera_name, rospy.get_time()))
                 self.pub_captured_image(image)
-                cv2.imwrite(image_name, image)
-                rospy.loginfo("Image saved to {}".format(image_name))
+                if self.first_save:
+                    self.first_save = False
+                else:
+                    num_images = len(os.listdir(self.img_dir))
+                    if num_images > self.max_images - 1:
+                        rospy.loginfo("Maximum number of images reached")
+                        rospy.signal_shutdown("Maximum number of images reached")
+                    cv2.imwrite(image_name, image)
+                    rospy.loginfo("Image saved to {}".format(image_name))
 
     def image_callback(self, msg):
         """
