@@ -8,7 +8,7 @@
             <arg name="enable_depth" value="true" />
             <arg name="enable_color" value="true" />
         </include>
-        <node name="det_data_handler_node" pkg="det_data_handler" type="det_data_handler_node" output="screen"/>
+        <node name="data_collection_node" pkg="det_data_handler" type="data_collection_node" output="screen"/>
     </group>
 
     <group ns="cam_2">
@@ -19,7 +19,7 @@
             <arg name="enable_depth" value="true" />
             <arg name="enable_color" value="true" />
         </include>
-        <node name="det_data_handler_node" pkg="det_data_handler" type="det_data_handler_node" output="screen"/>
+        <node name="data_collection_node" pkg="det_data_handler" type="data_collection_node" output="screen"/>
     </group>
 
     <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args =

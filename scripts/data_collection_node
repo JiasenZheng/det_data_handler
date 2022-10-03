@@ -13,7 +13,7 @@ import rospy
 from det_data_handler.data_handler import DataHandler
 
 if __name__ == '__main__':
-    rospy.init_node('data_handler_node')
+    rospy.init_node('data_collection_node')
     ns = rospy.get_namespace()
     image_topic = ns + "/" + ns + "/color/image_raw"
     data_handler = DataHandler(image_topic)
