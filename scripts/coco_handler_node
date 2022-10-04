@@ -52,9 +52,64 @@ class CocoHandler():
                     zip_ref.extractall(new_task_dir)
                 # delete the zip file
                 os.remove(os.path.join(new_task_dir, task))
+    
+    def merge_tasks(self, task_dir):
+        """
+        Merge all tasks
+        """
+        # create a tmp directory
+        tmp_dir = os.path.join(task_dir, "tmp")
+        image_dir = os.path.join(tmp_dir, "images")
+        annotation_dir = os.path.join(tmp_dir, "annotations")
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+        if not os.path.exists(annotation_dir):
+            os.makedirs(annotation_dir)
+        metadata = []
+        # merge all tasks   
+        for task in os.listdir(task_dir):
+            if task == "tmp":
+                continue
+            metadata.append(task)
+            task_dir = os.path.join(self.task_dir, task)
+            # copy task folder to tmp/images folder
+            os.system("cp -r {} {}".format(task_dir, image_dir))
+            # move all images to its parent folder
+            sub_task_dir = os.path.join(image_dir, task)
+            sub_image_dir = os.path.join(sub_task_dir, "images")
+            sub_annotation_dir = os.path.join(sub_task_dir, "annotations")
+            os.system("mv {}/* {}".format(sub_image_dir, sub_task_dir))
+            # remove the images folder
+            os.system("rm -r {}".format(sub_image_dir))
+            # rename the annotation file
+            annotation_file = os.path.join(sub_annotation_dir, "instances_default.json")
+            new_annotation_file = os.path.join(sub_annotation_dir, task + ".json")
+            os.rename(annotation_file, new_annotation_file)
+            # move the annotation file to tmp/annotations folder
+            os.system("mv {} {}".format(new_annotation_file, annotation_dir))
+            # remove the annotation folder
+            os.system("rm -r {}".format(sub_annotation_dir))
+        # merge all images
+        cas = coco_assistant.COCO_Assistant(image_dir, annotation_dir)
+        cas.merge()
+        # move the merged images to merged folder
+        result_dir = os.path.join(tmp_dir, "results", "merged")
+        os.system("mv {}/* {}".format(result_dir, self.merged_dir))
+        # remove the tmp folder
+        os.system("rm -r {}".format(tmp_dir))
+        # update the metadata file
+        json.dump(metadata, open(self.metadata_file, "w"))
+
+
+
+
+        
 
 
 if __name__ == '__main__':
     coco_handler = CocoHandler("/home/jiasen/data/dataset")
     coco_handler.unzip_tasks(coco_handler.task_dir)
+    coco_handler.merge_tasks(coco_handler.task_dir)
 
