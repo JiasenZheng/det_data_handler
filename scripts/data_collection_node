@@ -2,11 +2,6 @@
 
 """
 This script is used to handle both raw images and point clouds
-TODO:
-1. compute optical flow of images in real time
-2. get stationary image frames
-3. save stationary images to disk
-4. set max number of images to save
 """
 
 import rospy

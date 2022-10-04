@@ -1,0 +1,60 @@
+#!/usr/bin/python3
+
+"""
+This script is used to handle datasets with COCO format
+TODO:
+1. check dataset directory
+2. unzip dataset if there are zip files
+3. delete zip files
+4. create a merged dataset folder if there is not
+5. merge all dataset into one folder
+6. create or update the metadata.json file
+"""
+
+import os 
+import json
+import coco_assistant
+import zipfile
+
+class CocoHandler():
+    def __init__(self,
+                 dataset_dir):
+        self.dataset_dir = dataset_dir
+        self.merged_dir = os.path.join(self.dataset_dir, "merged")
+        self.task_dir = os.path.join(self.dataset_dir, "task")
+        assert os.path.exists(self.dataset_dir), "Dataset directory does not exist"
+        assert os.path.exists(self.task_dir), "Task directory does not exist"
+        if not os.path.exists(self.merged_dir):
+            os.makedirs(self.merged_dir)
+        self.metadata_file = os.path.join(self.merged_dir, "metadata.json")
+        if not os.path.exists(self.metadata_file):
+            self.metadata = {}
+            json.dump(self.metadata, open(self.metadata_file, "w"))
+        else:
+            self.metadata = json.load(open(self.metadata_file, "r"))
+
+
+    def unzip_tasks(self, task_dir):
+        """
+        Unzip all tasks
+        """
+        for task in os.listdir(task_dir):
+            task_file = os.path.join(self.task_dir, task)
+            if task_file.endswith(".zip"):
+                task_dir_name = task_file.split(".zip")[0]
+                new_task_dir = os.path.join(self.task_dir, task_dir_name)
+                if not os.path.exists(new_task_dir):
+                    os.makedirs(new_task_dir)
+                # move the zip file to the new task directory
+                os.rename(task_file, os.path.join(new_task_dir, task))
+                # unzip the zip file
+                with zipfile.ZipFile(os.path.join(new_task_dir, task), "r") as zip_ref:
+                    zip_ref.extractall(new_task_dir)
+                # delete the zip file
+                os.remove(os.path.join(new_task_dir, task))
+
+
+if __name__ == '__main__':
+    coco_handler = CocoHandler("/home/jiasen/data/dataset")
+    coco_handler.unzip_tasks(coco_handler.task_dir)
+

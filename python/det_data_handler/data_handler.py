@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-data handler class
+DataHandler class to collect data using optical flow
 TODO:
 1. compute optical flow of images in real time
 2. get stationary image frames
