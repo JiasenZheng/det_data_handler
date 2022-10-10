@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-This script is used to handle datasets with COCO format
+CocoHandler class
 TODO:
 1. check dataset directory
 2. unzip dataset if there are zip files
@@ -104,9 +104,3 @@ class CocoHandler():
         os.system("rm -r {}".format(tmp_dir))
         # update the metadata file
         json.dump(metadata, open(self.metadata_file, "w"))
-
-if __name__ == '__main__':
-    coco_handler = CocoHandler("/home/jiasen/data/dataset")
-    coco_handler.unzip_tasks(coco_handler.task_dir)
-    coco_handler.merge_tasks(coco_handler.task_dir)
-
