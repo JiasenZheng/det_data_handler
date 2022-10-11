@@ -28,6 +28,8 @@ class DataHandler():
         self.image_topic = image_topic
         self.camera_name = image_topic.split("/")[1]
         self.max_images = max_images
+
+    def run(self):
         self.img_dir = os.path.join(self.tmp_dir, "train_images")
         if not os.path.exists(self.img_dir):
             os.makedirs(self.img_dir)

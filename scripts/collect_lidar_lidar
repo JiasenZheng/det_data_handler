@@ -1,0 +1,6 @@
+#!/usr/bin/python3
+
+"""
+This script is used to collect data from multiple lidars.
+"""
+
