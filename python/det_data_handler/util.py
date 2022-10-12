@@ -8,6 +8,7 @@ import os
 import cv2
 import rosbag
 import cv_bridge
+import rospkg
 import rospy
 import roslaunch
 
@@ -51,3 +52,19 @@ def extract_image_from_bag(bag_name, image_topic, image_name):
             cv2.imwrite(image_name, cv_image)
             break
     bag.close()
+
+def extract_pcd_from_bag(bag_name, lidar_topic, pcd_name):
+    """
+    Extract the pcd from a given rosbag and save to a given path
+    """
+    # launch bag to pcd launch file
+    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    roslaunch.configure_logging(uuid)
+    rospack = rospkg.RosPack()
+    pkg_dir = rospack.get_path("det_data_handler")
+    launch_file = os.path.join(pkg_dir, "launch", "bag_to_pcd.launch")
+    cli_args = [launch_file, "bag_file:=" + bag_name, "lidar_topic:=" + lidar_topic, "pcd_file:=" + pcd_name]
+    roslaunch_args = cli_args[1:]
+    roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], roslaunch_args)]
+    parent = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_file)
+    parent.start()
