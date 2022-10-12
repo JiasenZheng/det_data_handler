@@ -2,11 +2,21 @@
 
 """
 This script is used to collect data from the camera and lidar.
+TODO:
+1. Implement canny edge detection to the camera image and publish it to a topic
+2. Run optical flow calculation to the image
+3. Create a service to bag record the data for specified time
+4. Extract one frame of image from the bag file
+5. Extract all the lidar data from the bag file
 """
 
+import os
+import cv2
 import rospy
-import rosbag
 import roslaunch
+import cv_bridge
+from sensor_msgs.msg import Image
+from det_data_handler.util import record_bag
 from det_data_handler.data_handler import DataHandler
 
 
@@ -14,7 +24,48 @@ class LidarCamCollector(DataHandler):
     def __init__(self, image_topic, lidar_topic):
         super(LidarCamCollector, self).__init__(image_topic)
         self.lidar_topic = lidar_topic
+        self.bridge = cv_bridge.CvBridge()
 
     def run(self):
-        pass
+        self.image_sub = rospy.Subscriber(self.image_topic,
+                                          Image,
+                                          self.image_callback)
+        self.image_edge_pub = rospy.Publisher("/cam_1/image_edge",
+                                              Image,
+                                              queue_size=1)
+
+    def image_edge_detection(self, cv_image):
+        """
+        Detect edges in the image
+        """
+        # convert image to grayscale
+        gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+        # apply canny edge detection
+        edges = cv2.Canny(gray, 100, 300, apertureSize=3)
+        edges = cv2.dilate(edges, None)
+        return edges
+
+    def image_callback(self, msg):
+        """
+        Callback function for image topic
+        """
+        cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        edges = self.image_edge_detection(cv_image)
+        # change the edge background to raw image background
+        cv_image[edges > 0] = (0, 0, 255)
+        # roatate image 90 degree anti-clockwise
+        cv_image = cv2.rotate(cv_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # publish the image with edges
+        self.image_edge_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+
+
+
+if __name__ == "__main__":
+    rospy.init_node("collect_lidar_cam")
+    ns = rospy.get_namespace()
+    image_topic = "/cam_1/camera/color/image_raw"
+    lidar_topic = "/lidar_1/livox/lidar"
+    lidar_cam_collector = LidarCamCollector(image_topic, lidar_topic)
+    lidar_cam_collector.run()
+    rospy.spin()
         

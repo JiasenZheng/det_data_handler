@@ -22,6 +22,8 @@
         </include>
     </group>
 
+    <node name="collect_lidar_cam" pkg="det_data_handler" type="collect_lidar_cam" output="screen" /> 
+
     <node name="rviz" pkg="rviz" type="rviz" args=
     "-d $(find det_data_handler)/config/rviz/lidar_cam_collection.rviz"/>
 

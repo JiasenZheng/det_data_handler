@@ -163,6 +163,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/data_collection
   scripts/handle_coco
+  scripts/collect_lidar_cam
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -190,6 +191,7 @@ catkin_install_python(PROGRAMS
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 install(FILES
   launch/optical_flow_detector.launch
+  launch/lidar_cam_collection.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
