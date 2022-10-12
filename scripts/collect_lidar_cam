@@ -13,6 +13,7 @@ TODO:
 import os
 import cv2
 import rospy
+import numpy as np
 import roslaunch
 import cv_bridge
 from sensor_msgs.msg import Image
@@ -25,6 +26,7 @@ class LidarCamCollector(DataHandler):
         super(LidarCamCollector, self).__init__(image_topic)
         self.lidar_topic = lidar_topic
         self.bridge = cv_bridge.CvBridge()
+        self.prev_image = None
 
     def run(self):
         self.image_sub = rospy.Subscriber(self.image_topic,
@@ -55,6 +57,13 @@ class LidarCamCollector(DataHandler):
         cv_image[edges > 0] = (0, 0, 255)
         # roatate image 90 degree anti-clockwise
         cv_image = cv2.rotate(cv_image, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        # calculate optical flow
+        if self.prev_image is not None:
+            mag, _, _ = self.compute_optical_flow(cv_image, self.prev_image)
+            mag_avg = np.round(np.average(mag), 3)
+            # show mag_avg in the image
+            cv2.putText(cv_image, "Optical Flow: " + str(mag_avg), (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+        self.prev_image = cv_image
         # publish the image with edges
         self.image_edge_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
 
