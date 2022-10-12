@@ -11,13 +11,15 @@ TODO:
 """
 
 import os
+from time import time
 import cv2
 import rospy
 import numpy as np
 import roslaunch
 import cv_bridge
 from sensor_msgs.msg import Image
-from det_data_handler.util import record_bag
+from std_srvs.srv import Empty, EmptyResponse
+from det_data_handler.util import record_bag, extract_image_from_bag
 from det_data_handler.data_handler import DataHandler
 
 
@@ -35,6 +37,9 @@ class LidarCamCollector(DataHandler):
         self.image_edge_pub = rospy.Publisher("/cam_1/image_edge",
                                               Image,
                                               queue_size=1)
+        self.record_bag_service = rospy.Service("/record_bag", 
+                                                Empty, 
+                                                self.record_bag_callback)
 
     def image_edge_detection(self, cv_image):
         """
@@ -61,13 +66,40 @@ class LidarCamCollector(DataHandler):
         if self.prev_image is not None:
             mag, _, _ = self.compute_optical_flow(cv_image, self.prev_image)
             mag_avg = np.round(np.average(mag), 3)
-            # show mag_avg in the image
             cv2.putText(cv_image, "Optical Flow: " + str(mag_avg), (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
         self.prev_image = cv_image
         # publish the image with edges
         self.image_edge_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
 
-
+    def record_bag_callback(self, req):
+        """
+        Callback function for record bag service
+        """
+        # record bag
+        current_time = rospy.get_time()
+        time_str = str(rospy.Time(current_time).to_sec())
+        time_str = time_str.split(".")[0]
+        time_str = time_str.split(" ")[0]
+        time_str = time_str.replace(":", "-")
+        bag_dir = "/tmp/detection/collect_lidar_cam/bags"
+        bag_name = bag_dir + "/bag_" + str(time_str) + ".bag"
+        topics = [self.image_topic, self.lidar_topic]
+        duration = 10.0
+        record_bag(bag_name, topics, duration)
+        rospy.loginfo("Bag recorded to: " + bag_name)
+        # extract image from bag
+        image_dir = "/tmp/detection/collect_lidar_cam/images"
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+        # check if image_dir is empty
+        if len(os.listdir(image_dir)) == 0:
+            image_name = os.path.join(image_dir, "0.bmp")
+        else:
+            image_name = os.path.join(image_dir, str(len(os.listdir(image_dir))) + ".bmp")
+        extract_image_from_bag(bag_name, self.image_topic, image_name)
+        # extract point cloud from bag
+        
+        return EmptyResponse()
 
 if __name__ == "__main__":
     rospy.init_node("collect_lidar_cam")
