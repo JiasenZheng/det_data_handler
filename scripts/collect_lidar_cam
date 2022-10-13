@@ -30,7 +30,17 @@ class LidarCamCollector(DataHandler):
         self.bag_name = None
 
 
+
     def run(self):
+        self.bag_file = "/tmp/detection/collect_lidar_cam/bags"
+        if not os.path.exists(self.bag_file):
+            os.makedirs(self.bag_file)
+        self.image_file = "/tmp/detection/collect_lidar_cam/images"
+        if not os.path.exists(self.image_file):
+            os.makedirs(self.image_file)
+        self.pcd_file = "/tmp/detection/collect_lidar_cam/pcds"
+        if not os.path.exists(self.pcd_file):
+            os.makedirs(self.pcd_file)
         self.image_sub = rospy.Subscriber(self.image_topic,
                                           Image,
                                           self.image_callback)
@@ -75,15 +85,11 @@ class LidarCamCollector(DataHandler):
         """
         Extract the pcd from the bag file
         """
-        # extract point cloud from bag
-        pcd_dir = "/tmp/detection/collect_lidar_cam/pcds"
-        if not os.path.exists(pcd_dir):
-            os.makedirs(pcd_dir)
-        # check if pcd_dir is empty
-        if len(os.listdir(pcd_dir)) == 0:
-            pcd_name = os.path.join(pcd_dir, "0.pcd")
+        # check if pcd_file is empty
+        if len(os.listdir(self.pcd_file)) == 0:
+            pcd_name = os.path.join(self.pcd_file, "0.pcd")
         else:
-            pcd_name = os.path.join(pcd_dir, str(len(os.listdir(pcd_dir))) + ".pcd")
+            pcd_name = os.path.join(self.pcd_file, str(len(os.listdir(self.pcd_file))) + ".pcd")
         if self.bag_name is not None:
             extract_pcd_from_bag(self.bag_name, self.lidar_topic, pcd_name)
             rospy.loginfo("Extracted pcd from bag file: " + pcd_name)
@@ -100,22 +106,17 @@ class LidarCamCollector(DataHandler):
         time_str = time_str.split(".")[0]
         time_str = time_str.split(" ")[0]
         time_str = time_str.replace(":", "-")
-        bag_dir = "/tmp/detection/collect_lidar_cam/bags"
-        bag_name = bag_dir + "/bag_" + str(time_str) + ".bag"
+        bag_name = self.bag_file + "/bag_" + str(time_str) + ".bag"
         topics = [self.image_topic, self.lidar_topic]
         duration = 10.0
         record_bag(bag_name, topics, duration)
         self.bag_name = bag_name
         rospy.loginfo("Bag recorded to: " + bag_name)
         # extract image from bag
-        image_dir = "/tmp/detection/collect_lidar_cam/images"
-        if not os.path.exists(image_dir):
-            os.makedirs(image_dir)
-        # check if image_dir is empty
-        if len(os.listdir(image_dir)) == 0:
-            image_name = os.path.join(image_dir, "0.bmp")
+        if len(os.listdir(self.image_file)) == 0:
+            image_name = os.path.join(self.image_file, "0.bmp")
         else:
-            image_name = os.path.join(image_dir, str(len(os.listdir(image_dir))) + ".bmp")
+            image_name = os.path.join(self.image_file, str(len(os.listdir(self.image_file))) + ".bmp")
         extract_image_from_bag(bag_name, self.image_topic, image_name)
         rospy.loginfo("Image extracted to: " + image_name)
         return EmptyResponse()
