@@ -17,6 +17,7 @@ import numpy as np
 import cv_bridge
 from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyResponse
+from det_data_handler.srv import Record 
 from det_data_handler.util import record_bag, extract_image_from_bag, extract_pcd_from_bag
 from det_data_handler.data_handler import DataHandler
 
@@ -48,7 +49,7 @@ class LidarCamCollector(DataHandler):
                                               Image,
                                               queue_size=1)
         self.record_bag_service = rospy.Service("/record_bag", 
-                                                Empty, 
+                                                Record, 
                                                 self.record_bag_callback)
 
     def image_edge_detection(self, cv_image):
@@ -100,6 +101,7 @@ class LidarCamCollector(DataHandler):
         """
         Callback function for record bag service
         """
+        duration = req.duration
         # record bag
         current_time = rospy.get_time()
         time_str = str(rospy.Time(current_time).to_sec())
@@ -108,7 +110,7 @@ class LidarCamCollector(DataHandler):
         time_str = time_str.replace(":", "-")
         bag_name = self.bag_file + "/bag_" + str(time_str) + ".bag"
         topics = [self.image_topic, self.lidar_topic]
-        duration = 10.0
+        # duration = 10.0
         record_bag(bag_name, topics, duration)
         self.bag_name = bag_name
         rospy.loginfo("Bag recorded to: " + bag_name)
