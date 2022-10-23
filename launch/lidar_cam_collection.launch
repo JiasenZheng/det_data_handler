@@ -17,7 +17,10 @@
         <arg name="rviz_enable"           value="false"/>
     </include>
 
-    <node name="collect_lidar_cam" pkg="det_data_handler" type="collect_lidar_cam" output="screen"/> 
+    <node name="collect_lidar_cam" pkg="det_data_handler" type="collect_lidar_cam" output="screen">
+        <param name="lidar_topic" value="/livox/lidar"/>
+        <param name="image_topic" value="/camera/color/image_raw"/>
+    </node> 
 
     <node name="rviz" pkg="rviz" type="rviz" args=
     "-d $(find det_data_handler)/config/rviz/lidar_cam_collection.rviz"/>
