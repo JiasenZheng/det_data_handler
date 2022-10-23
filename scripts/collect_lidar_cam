@@ -30,8 +30,6 @@ class LidarCamCollector(DataHandler):
         self.prev_image = None
         self.bag_name = None
 
-
-
     def run(self):
         self.bag_file = "/tmp/detection/collect_lidar_cam/bags"
         if not os.path.exists(self.bag_file):
@@ -95,7 +93,6 @@ class LidarCamCollector(DataHandler):
             extract_pcd_from_bag(self.bag_name, self.lidar_topic, pcd_name)
             rospy.loginfo("Extracted pcd from bag file: " + pcd_name)
             self.bag_name = None
-        
 
     def record_bag_callback(self, req):
         """
