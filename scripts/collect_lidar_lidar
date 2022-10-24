@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 
 """
-This script is used to collect data from multiple lidars.
+This script is used to collect data from multiple (two) lidars.
+TODO:
+1. connect all sensors and bring up the system
+2. write a launch file for multiple livox
+3. write a launch file for multiple livox with CAD extrinsic calibration
 """
 

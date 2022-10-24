@@ -1,0 +1,25 @@
+<launch>
+    <!-- <param name="/use_sim_time" value="true"/> -->
+
+    <group ns="lidar_0">
+        <include file="$(find livox_ros_driver)/launch/livox_lidar_rviz.launch">
+            <arg name="bd_list" default="0TFDJBF001W2TW1"/>
+            <arg name="rviz_enable"           value="false"/>
+            <arg name="msg_frame_id"          value="livox_0"/>
+        </include>
+    </group>
+
+    <group ns="lidar_1">
+        <include file="$(find livox_ros_driver)/launch/livox_lidar_rviz.launch">
+            <arg name="bd_list" default="0TFDJBC001Q2431"/>
+            <arg name="rviz_enable"           value="false"/>
+            <arg name="msg_frame_id"          value="livox_1"/>
+        </include>
+    </group>
+
+    <node name="rviz" pkg="rviz" type="rviz" args=
+    "-d $(find det_data_handler)/config/rviz/multiple_livox.rviz"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="1 0 0 0 0 0 1 livox_0 livox_1 100" />
+    <node pkg="tf" type="static_transform_publisher" name="world2lidar" args="1 0 0 0 0 0 1 world livox_0 100" />
+</launch>
