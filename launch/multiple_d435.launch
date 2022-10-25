@@ -1,17 +1,17 @@
 <launch>
-  <arg name="serial_no_camera1"         default="938422073373"/>
-  <arg name="serial_no_camera2"         default="937622070073"/>
+  <arg name="serial_no_camera0"         default="938422075179"/>
+  <arg name="serial_no_camera1"         default="937622070073"/>
+  <arg name="camera0"                   default="cam_0"/>
   <arg name="camera1"                   default="cam_1"/>
-  <arg name="camera2"                   default="cam_2"/>
+  <arg name="tf_prefix_camera0"         default="$(arg camera0)"/>
   <arg name="tf_prefix_camera1"         default="$(arg camera1)"/>
-  <arg name="tf_prefix_camera2"         default="$(arg camera2)"/>
   <arg name="initial_reset"             default="false"/>
   <arg name="reconnect_timeout"         default="6.0"/>
 
-  <group ns="$(arg camera1)">
+  <group ns="$(arg camera0)">
     <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
-      <arg name="serial_no"             value="$(arg serial_no_camera1)"/>
-      <arg name="tf_prefix"             value="$(arg tf_prefix_camera1)"/>
+      <arg name="serial_no"             value="$(arg serial_no_camera0)"/>
+      <arg name="tf_prefix"             value="$(arg tf_prefix_camera0)"/>
       <arg name="initial_reset"         value="$(arg initial_reset)"/>
       <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
       <arg name="enable_pointcloud" value="false" />
@@ -22,10 +22,10 @@
     </include>
   </group>
 
-  <group ns="$(arg camera2)">
+  <group ns="$(arg camera1)">
     <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
-      <arg name="serial_no"             value="$(arg serial_no_camera2)"/>
-      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera2)"/>
+      <arg name="serial_no"             value="$(arg serial_no_camera1)"/>
+      <arg name="tf_prefix"		          value="$(arg tf_prefix_camera1)"/>
       <arg name="initial_reset"         value="$(arg initial_reset)"/>
       <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
       <arg name="enable_pointcloud" value="false" />
