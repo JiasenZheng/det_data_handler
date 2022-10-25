@@ -20,6 +20,5 @@
     <node name="rviz" pkg="rviz" type="rviz" args=
     "-d $(find det_data_handler)/config/rviz/multiple_livox.rviz"/>
 
-    <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="1 0 0 0 0 0 1 livox_0 livox_1 100" />
-    <node pkg="tf" type="static_transform_publisher" name="world2lidar" args="1 0 0 0 0 0 1 world livox_0 100" />
+    <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="-0.73352792603 0 -1.57303922943 0.9063077 0 0.4226184 0 livox_1 livox_0 100" />
 </launch>
