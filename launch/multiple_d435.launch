@@ -7,6 +7,7 @@
   <arg name="tf_prefix_camera1"         default="$(arg camera1)"/>
   <arg name="initial_reset"             default="false"/>
   <arg name="reconnect_timeout"         default="6.0"/>
+  <arg name="use_rviz"                  default="true"/>
 
   <group ns="$(arg camera0)">
     <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
@@ -37,6 +38,7 @@
   </group>
 
   <node name="rviz" pkg="rviz" type="rviz" args=
-  "-d $(find det_data_handler)/config/rviz/multiple_d435.rviz"/>
+  "-d $(find det_data_handler)/config/rviz/multiple_d435.rviz"
+  if="$(arg use_rviz)" />
 
 </launch>
