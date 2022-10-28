@@ -1,21 +1,75 @@
 <launch>
     <!-- load parameters -->
-    <rosparam file="$(find det_data_handler)/config/tag/tag_settings.yaml" command="load" ns="apriltag_ros_continuous_node"/>
-    <rosparam file="$(find det_data_handler)/config/tag/tags.yaml" command="load" ns="apriltag_ros_continuous_node"/>
+    <rosparam file="$(find det_data_handler)/config/tag/tag_settings.yaml" command="load" ns="apriltag_ros_continuous_node_0"/>
+    <rosparam file="$(find det_data_handler)/config/tag/tags.yaml" command="load" ns="apriltag_ros_continuous_node_0"/>
+    <rosparam file="$(find det_data_handler)/config/tag/tag_settings.yaml" command="load" ns="apriltag_ros_continuous_node_1"/>
+    <rosparam file="$(find det_data_handler)/config/tag/tags.yaml" command="load" ns="apriltag_ros_continuous_node_1"/>
 
     <!-- bring up cameras -->
-    <include file="$(find det_data_handler)/launch/multiple_d435.launch" >
-        <arg name="use_rviz" value="false"/>
-    </include>
-    <!-- setup tfs between cameras and lidars -->
+    <arg name="serial_no_camera0"         default="938422075179"/>
+    <arg name="serial_no_camera1"         default="937622070073"/>
+    <arg name="camera0"                   default="cam_0"/>
+    <arg name="camera1"                   default="cam_1"/>
+    <arg name="tf_prefix_camera0"         default="$(arg camera0)"/>
+    <arg name="tf_prefix_camera1"         default="$(arg camera1)"/>
+    <arg name="initial_reset"             default="false"/>
+    <arg name="reconnect_timeout"         default="6.0"/>
+    <arg name="use_rviz"                  default="true"/>
+
+    <group ns="$(arg camera0)">
+        <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+        <arg name="serial_no"             value="$(arg serial_no_camera0)"/>
+        <arg name="tf_prefix"             value="$(arg tf_prefix_camera0)"/>
+        <arg name="initial_reset"         value="$(arg initial_reset)"/>
+        <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
+        <arg name="enable_pointcloud" value="false" />
+        <arg name="enable_depth" value="true" />
+        <arg name="enable_confidence" value="false" />
+        <arg name="color_fps" value="30" />
+        <arg name="enable_color" value="true" />
+        </include>
+    </group>
+
+    <group ns="$(arg camera1)">
+        <include file="$(find realsense2_camera)/launch/includes/nodelet.launch.xml">
+        <arg name="serial_no"             value="$(arg serial_no_camera1)"/>
+        <arg name="tf_prefix"		          value="$(arg tf_prefix_camera1)"/>
+        <arg name="initial_reset"         value="$(arg initial_reset)"/>
+        <arg name="reconnect_timeout"     value="$(arg reconnect_timeout)"/>
+        <arg name="enable_pointcloud" value="false" />
+        <arg name="enable_depth" value="true" />
+        <arg name="enable_confidence" value="false" />
+        <arg name="color_fps" value="30" />
+        <arg name="enable_color" value="true" />
+        </include>
+    </group>
 
     <!-- detect april tags -->
-    <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" clear_params="true" output="screen" name="apriltag_ros_continuous_node">
+    <!-- <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" clear_params="true" output="screen" name="apriltag_ros_continuous_node_0">
+        <remap from="image_rect" to="/cam_0/color/image_raw" />
+        <remap from="camera_info" to="/cam_0/color/camera_info" />
+        <param name="camera_frame" type="str" value="cam_0_color_optical_frame" />
+        <param name="publish_tag_detections_image" type="bool" value="true" />
+    </node> -->
+    
+    <!-- <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" clear_params="true" output="screen" name="apriltag_ros_continuous_node_1">
         <remap from="image_rect" to="/cam_1/color/image_raw" />
         <remap from="camera_info" to="/cam_1/color/camera_info" />
         <param name="camera_frame" type="str" value="cam_1_color_optical_frame" />
         <param name="publish_tag_detections_image" type="bool" value="true" />
-    </node>
+    </node> -->
+
+    <!-- setup tf between cameras and tag -->
+    <!-- <node pkg="tf" type="static_transform_publisher" name="tag_cam_0_tf" args="-0.023 1.157 1.659 -0.685 0.148 0.698 -0.145 tag cam_0_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="tag_cam_1_tf" args="-0.037 -0.661 1.629 0.161 0.693 0.155 0.685 tag cam_1_link 100" /> -->
+
+    <!-- setup tf between cam_0 and cam_1 -->
+    <node pkg="tf" type="static_transform_publisher" name="cam_0_cam_1_tf" args="0.765 1.650 -0.001 0.907 -0.421 -0.002 0.001 cam_0_link cam_1_link 100" />
+
+    <!-- setup tfs between camera optical frames and lidar frames -->
+    <node pkg="tf" type="static_transform_publisher" name="cam_0_lidar_tf" args="-0.0358514 -0.0065587 -0.00990101 0.7095203 -0.0089623 0.7045682 0.0091806 cam_0_color_optical_frame livox_0 100" />
+    <node pkg="tf" type="static_transform_publisher" name="cam_1_lidar_tf" args="-0.040864 0.000272537 -0.0186483 0.7098589 -0.0056927 0.7042322 0.0111757 cam_1_color_optical_frame livox_1 100" />
+
 
     <!-- rviz -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find det_data_handler)/config/rviz/tag_calib.rviz"/>

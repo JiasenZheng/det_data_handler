@@ -1,0 +1,30 @@
+<launch>
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+      <arg name="camera"                value="cam_0" />
+      <arg name="serial_no"             value="938422075179" />
+      <arg name="enable_pointcloud"     value="false" />
+      <arg name="enable_depth"          value="true" />
+      <arg name="enable_confidence"     value="false" />
+      <arg name="color_width"           value="1920" />
+      <arg name="color_height"          value="1080" />
+      <arg name="color_fps"             value="30" />
+      <arg name="enable_color"          value="true" />
+  </include>
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+      <arg name="camera"                value="cam_1" />
+      <arg name="serial_no"             value="937622070073" />
+      <arg name="enable_pointcloud"     value="false" />
+      <arg name="enable_depth"          value="true" />
+      <arg name="enable_confidence"     value="false" />
+      <arg name="color_width"           value="1920" />
+      <arg name="color_height"          value="1080" />
+      <arg name="color_fps"             value="30" />
+      <arg name="enable_color"          value="true" />
+  </include>
+
+  <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args =
+  "--perspective-file $(find det_data_handler)/config/rqt/stereo_calib_multi_cams.perspective"/>
+
+</launch>

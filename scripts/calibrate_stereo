@@ -1,0 +1,87 @@
+#!/usr/bin/python3
+
+"""
+This script is used to calibrate the stereo camera.
+TODO:
+1. load camera-related parameters from yaml file
+2. use Optical flow to apture the images
+3. run the chessboard detection and visualize the results
+4. check the results and save the feature points
+5. run the calibration
+"""
+
+import rospy
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import numpy as np
+import cv2
+from det_data_handler.data_handler import DataHandler
+
+
+class StereoCalibrator(DataHandler):
+    def __init__(self, 
+                 image_0_topic,
+                 image_1_topic,
+                 chessboard_size,
+                 chessboard_square_size,
+                 num_images = 30):
+        super(StereoCalibrator, self).__init__(image_0_topic)
+        self.image_0_topic = image_0_topic
+        self.image_1_topic = image_1_topic
+        self.bridge = CvBridge()
+        self.chessboard_size = chessboard_size
+        self.chessboard_square_size = chessboard_square_size
+        self.num_images = num_images
+        self.prev_image = None 
+        self.image_l_points_pub = rospy.Publisher("cam_0/chessboard_points",
+                                                   Image,
+                                                   queue_size=1)  
+        self.image_r_points_pub = rospy.Publisher("cam_1/chessboard_points",
+                                                   Image,
+                                                   queue_size=1)
+        self.image_l_sub = rospy.Subscriber(self.image_0_topic,
+                                            Image,
+                                            self.image_callback) 
+        self.image_r_sub = rospy.Subscriber(self.image_1_topic,
+                                            Image,
+                                            self.image_callback)
+        self.image_l_points = []
+        self.image_r_points = []
+    
+    def image_callback(self, msg, publisher):
+        """
+        1. compute the optical flow
+        2. if the optical flow is lower than threshold
+        3. run the chessboard detection
+        4. if the chessboard is detected, visualize the results
+        5. save the result
+        """
+        cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        if self.prev_image is None:
+            self.prev_image = cv_image
+        else:
+            # compute optical flow
+            prev_gray = cv2.cvtColor(self.prev_image, cv2.COLOR_BGR2GRAY)
+            curr_gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+            mag, _, _ = self.compute_optical_flow(prev_gray, curr_gray)
+            mag_avg = np.round(np.average(mag), 3)
+            cv2.putText(cv_image, "Optical Flow: " + str(mag_avg), (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+        self.prev_image = cv_image
+        publisher.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+
+
+if __name__ == "__main__":
+    rospy.init_node("stereo_calibrator")
+    image_0_topic = "/cam_0/color/image_raw"
+    image_1_topic = "/cam_1/color/image_raw"
+    chessboard_size = (9, 6)
+    chessboard_square_size = 0.025
+    num_images = 30
+    calibrator = StereoCalibrator(image_0_topic,
+                                  image_1_topic,
+                                  chessboard_size,
+                                  chessboard_square_size,
+                                  num_images)
+    rospy.spin()
+
+
