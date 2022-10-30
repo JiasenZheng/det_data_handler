@@ -26,7 +26,7 @@
       <arg name="enable_color"          value="true" />
   </include>
 
-  <node name="calibrate_stereo" pkg="det_data_handler" type="calibrate_stereo" output="screen" />
+  <!-- <node name="calibrate_stereo" pkg="det_data_handler" type="calibrate_stereo" output="screen" /> -->
 
   <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args =
   "--perspective-file $(find det_data_handler)/config/rqt/stereo_calib_multi_cams.perspective"/>

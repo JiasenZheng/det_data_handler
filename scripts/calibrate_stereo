@@ -98,6 +98,13 @@ class StereoCalibrator(DataHandler):
             ret_0, corners_0 = cv2.findChessboardCorners(image_0, self.chessboard_size)
             ret_1, corners_1 = cv2.findChessboardCorners(image_1, self.chessboard_size)
             if ret_0 and ret_1:
+                # subpixel refinement
+                image_0_gray = cv2.cvtColor(image_0, cv2.COLOR_BGR2GRAY)
+                image_1_gray = cv2.cvtColor(image_1, cv2.COLOR_BGR2GRAY)
+                corners_0 = cv2.cornerSubPix(image_0_gray, corners_0, (11, 11), (-1, -1),
+                                                (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
+                corners_1 = cv2.cornerSubPix(image_1_gray, corners_1, (11, 11), (-1, -1),
+                                            (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
                 self.image_0_points.append(corners_0)
                 self.image_1_points.append(corners_1)
                 image_0 = cv2.drawChessboardCorners(image_0, self.chessboard_size, corners_0, ret_0)
