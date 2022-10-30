@@ -33,6 +33,8 @@ class StereoCalibrator(DataHandler):
         self.chessboard_square_size = chessboard_square_size
         self.num_images = num_images
         self.prev_image_1 = None
+        self.stationary_time = 0.0
+        self.image_stored = False
         self.image_0_points_pub = rospy.Publisher("cam_0/chessboard_points",
                                                    Image,
                                                    queue_size=1)  
@@ -46,7 +48,22 @@ class StereoCalibrator(DataHandler):
         self.image_0_points = []
         self.image_1_points = []
     
+    def run(self):
+        if len(self.image_0_points) == self.num_images:
+            # run calibration
+            flags = 0
+            flags |= cv2.CALIB_FIX_INTRINSIC
+            criteria_stereo = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, 100, 1e-5)
+            obj_pts = np.zeros((1, self.chessboard_size[0] * self.chessboard_size[1], 3), np.float32)
+            obj_pts[0, :, :2] = np.mgrid[0:self.chessboard_size[0], 0:self.chessboard_size[1]].T.reshape(-1, 2)
+            chessboard_square_size_mm = self.chessboard_square_size * 1000
+            obj_pts *= chessboard_square_size_mm
+            obj_pts = [obj_pts] * len(self.image_0_points)
+
+
+    
     def filter_callback(self, image_0, image_1):
+        curr_image_num = len(self.image_0_points)
         image_0 = self.bridge.imgmsg_to_cv2(image_0, "bgr8")
         image_1 = self.bridge.imgmsg_to_cv2(image_1, "bgr8")
         if self.prev_image_1 is None:
@@ -54,7 +71,7 @@ class StereoCalibrator(DataHandler):
             return
         # compute optical flow
         mag_1, _, _ = self.compute_optical_flow(self.prev_image_1, image_1)
-        mag_1_avg = np.round(np.average(mag_1), 2)
+        mag_1_avg = np.round(np.average(mag_1), 3)
         if mag_1_avg > 0.5:
             color = (0, 0, 255)
         else:
@@ -63,16 +80,28 @@ class StereoCalibrator(DataHandler):
         color, 4)
         cv2.putText(image_1, "Optical Flow: " + str(mag_1_avg), (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 2,
         color, 4)
+        cv2.putText(image_0, str(curr_image_num) + "/" + str(self.num_images) + " stored", (20, 120), cv2.FONT_HERSHEY_SIMPLEX, 2, 
+        (0, 255, 0), 4)
+        cv2.putText(image_1, str(curr_image_num) + "/" + str(self.num_images) + " stored", (20, 120), cv2.FONT_HERSHEY_SIMPLEX, 2,
+        (0, 255, 0), 4)
         self.prev_image_1 = image_1
-        
-        # run chessboard detection
-        ret_0, corners_0 = cv2.findChessboardCorners(image_0, self.chessboard_size)
-        ret_1, corners_1 = cv2.findChessboardCorners(image_1, self.chessboard_size)
-        if ret_0 and ret_1:
-            self.image_0_points.append(corners_0)
-            self.image_1_points.append(corners_1)
-            image_0 = cv2.drawChessboardCorners(image_0, self.chessboard_size, corners_0, ret_0)
-            image_1 = cv2.drawChessboardCorners(image_1, self.chessboard_size, corners_1, ret_1)
+        if mag_1_avg < 0.5:
+            self.stationary_time += 1.0/30.0
+        else:
+            self.stationary_time = 0.0
+            self.image_stored = False
+        if curr_image_num > self.num_images:
+            return
+        if self.stationary_time > 0.25 and not self.image_stored:
+            self.image_stored = True
+            # run chessboard detection
+            ret_0, corners_0 = cv2.findChessboardCorners(image_0, self.chessboard_size)
+            ret_1, corners_1 = cv2.findChessboardCorners(image_1, self.chessboard_size)
+            if ret_0 and ret_1:
+                self.image_0_points.append(corners_0)
+                self.image_1_points.append(corners_1)
+                image_0 = cv2.drawChessboardCorners(image_0, self.chessboard_size, corners_0, ret_0)
+                image_1 = cv2.drawChessboardCorners(image_1, self.chessboard_size, corners_1, ret_1)
         # publish the images
         self.image_0_points_pub.publish(self.bridge.cv2_to_imgmsg(image_0, "bgr8"))
         self.image_1_points_pub.publish(self.bridge.cv2_to_imgmsg(image_1, "bgr8"))
