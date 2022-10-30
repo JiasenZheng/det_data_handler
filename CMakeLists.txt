@@ -165,6 +165,7 @@ catkin_install_python(PROGRAMS
   scripts/data_collection
   scripts/handle_coco
   scripts/collect_lidar_cam
+  scripts/calibrate_stereo
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

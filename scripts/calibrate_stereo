@@ -33,22 +33,24 @@ class StereoCalibrator(DataHandler):
         self.chessboard_square_size = chessboard_square_size
         self.num_images = num_images
         self.prev_image = None 
-        self.image_l_points_pub = rospy.Publisher("cam_0/chessboard_points",
+        self.image_0_points_pub = rospy.Publisher("cam_0/chessboard_points",
                                                    Image,
                                                    queue_size=1)  
-        self.image_r_points_pub = rospy.Publisher("cam_1/chessboard_points",
+        self.image_1_points_pub = rospy.Publisher("cam_1/chessboard_points",
                                                    Image,
                                                    queue_size=1)
-        self.image_l_sub = rospy.Subscriber(self.image_0_topic,
+        self.image_0_sub = rospy.Subscriber(self.image_0_topic,
                                             Image,
-                                            self.image_callback) 
-        self.image_r_sub = rospy.Subscriber(self.image_1_topic,
+                                            self.image_callback,
+                                            (self.image_0_points_pub, ))
+        self.image_1_sub = rospy.Subscriber(self.image_1_topic,
                                             Image,
-                                            self.image_callback)
-        self.image_l_points = []
-        self.image_r_points = []
+                                            self.image_callback,
+                                            (self.image_1_points_pub, ))
+        self.image_0_points = []
+        self.image_1_points = []
     
-    def image_callback(self, msg, publisher):
+    def image_callback(self, msg, args):
         """
         1. compute the optical flow
         2. if the optical flow is lower than threshold
@@ -61,21 +63,39 @@ class StereoCalibrator(DataHandler):
             self.prev_image = cv_image
         else:
             # compute optical flow
-            prev_gray = cv2.cvtColor(self.prev_image, cv2.COLOR_BGR2GRAY)
-            curr_gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-            mag, _, _ = self.compute_optical_flow(prev_gray, curr_gray)
+            mag, _, _ = self.compute_optical_flow(self.prev_image, cv_image)
             mag_avg = np.round(np.average(mag), 3)
-            cv2.putText(cv_image, "Optical Flow: " + str(mag_avg), (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 4)
+            if mag_avg < 0.5:
+                color = (0, 255, 0)
+            else:
+                color = (0, 0, 255)
+            cv2.putText(cv_image, "Optical Flow: " + str(mag_avg), (20, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, 
+            color, 4)
+        # run the chessboard detection
+        ret, corners = cv2.findChessboardCorners(cv_image, self.chessboard_size)
+
+        if ret:
+            # draw the corners
+            cv2.drawChessboardCorners(cv_image, self.chessboard_size, corners, ret)
+            # save the result
+            if args[0] == self.image_0_points_pub:
+                self.image_0_points.append(corners)
+            elif args[0] == self.image_1_points_pub:
+                self.image_1_points.append(corners)
+            else:
+                raise ValueError("Invalid publisher")
+        # publish the results
         self.prev_image = cv_image
+        publisher = args[0]
         publisher.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
 
 
 if __name__ == "__main__":
-    rospy.init_node("stereo_calibrator")
+    rospy.init_node("calibrate_stereo")
     image_0_topic = "/cam_0/color/image_raw"
     image_1_topic = "/cam_1/color/image_raw"
-    chessboard_size = (9, 6)
-    chessboard_square_size = 0.025
+    chessboard_size = (12, 6)
+    chessboard_square_size = 0.050
     num_images = 30
     calibrator = StereoCalibrator(image_0_topic,
                                   image_1_topic,

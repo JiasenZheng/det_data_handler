@@ -1,5 +1,7 @@
 <launch>
 
+  <param name="use_sim_time" value="false" />
+
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
       <arg name="camera"                value="cam_0" />
       <arg name="serial_no"             value="938422075179" />
@@ -8,7 +10,7 @@
       <arg name="enable_confidence"     value="false" />
       <arg name="color_width"           value="1920" />
       <arg name="color_height"          value="1080" />
-      <arg name="color_fps"             value="30" />
+      <arg name="color_fps"             value="10" />
       <arg name="enable_color"          value="true" />
   </include>
 
@@ -23,6 +25,8 @@
       <arg name="color_fps"             value="30" />
       <arg name="enable_color"          value="true" />
   </include>
+
+  <node name="calibrate_stereo" pkg="det_data_handler" type="calibrate_stereo" output="screen" />
 
   <node name="rqt_gui" pkg="rqt_gui" type="rqt_gui" args =
   "--perspective-file $(find det_data_handler)/config/rqt/stereo_calib_multi_cams.perspective"/>
