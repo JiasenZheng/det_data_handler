@@ -11,7 +11,7 @@ TODO:
 """
 
 import rospy
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CameraInfo
 from cv_bridge import CvBridge
 import numpy as np
 import cv2
@@ -19,7 +19,7 @@ import message_filters
 from det_data_handler.data_handler import DataHandler
 
 class StereoCalibrator(DataHandler):
-    def __init__(self, 
+    def __init__(self,
                  image_0_topic,
                  image_1_topic,
                  chessboard_size,
@@ -47,6 +47,17 @@ class StereoCalibrator(DataHandler):
         self.ts.registerCallback(self.filter_callback)
         self.image_0_points = []
         self.image_1_points = []
+        self.calibrated = False
+        # pinhole camera model
+        self.camera_0_distortion = np.zeros((1, 5))
+        self.camera_1_distortion = np.zeros((1, 5))
+        # wait for the camera info
+        rospy.loginfo("Waiting for camera info...")
+        self.camera_0_info = rospy.wait_for_message("/cam_0/color/camera_info", CameraInfo)
+        self.camera_1_info = rospy.wait_for_message("/cam_1/color/camera_info", CameraInfo)
+        self.camera_0_intrinsic = np.array(self.camera_0_info.K).reshape((3, 3))
+        self.camera_1_intrinsic = np.array(self.camera_1_info.K).reshape((3, 3))
+        rospy.loginfo("Camera info received.")
     
     def run(self):
         if len(self.image_0_points) == self.num_images:
@@ -56,9 +67,24 @@ class StereoCalibrator(DataHandler):
             criteria_stereo = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, 100, 1e-5)
             obj_pts = np.zeros((1, self.chessboard_size[0] * self.chessboard_size[1], 3), np.float32)
             obj_pts[0, :, :2] = np.mgrid[0:self.chessboard_size[0], 0:self.chessboard_size[1]].T.reshape(-1, 2)
-            chessboard_square_size_mm = self.chessboard_square_size * 1000
-            obj_pts *= chessboard_square_size_mm
+            obj_pts *= chessboard_square_size
             obj_pts = [obj_pts] * len(self.image_0_points)
+            image_size = self.prev_image_1.shape[:2]
+            _, _, _, _, _, R, T, _, _ = cv2.stereoCalibrate(obj_pts,
+                                                            self.image_0_points,
+                                                            self.image_1_points,
+                                                            self.camera_0_intrinsic,
+                                                            self.camera_0_distortion,
+                                                            self.camera_1_intrinsic,
+                                                            self.camera_1_distortion,
+                                                            image_size,
+                                                            flags=flags,
+                                                            criteria=criteria_stereo)
+            print("R: ", R)
+            print("T: ", T)
+            
+            self.calibrated = True
+
 
 
     
@@ -126,6 +152,9 @@ if __name__ == "__main__":
                                   chessboard_size,
                                   chessboard_square_size,
                                   num_images)
-    rospy.spin()
+    rate = rospy.Rate(10)
+    while not rospy.is_shutdown() and not calibrator.calibrated:
+        calibrator.run()
+        rate.sleep()
 
 

@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /lidar_0_raw_cloud1
+        - /lidar_0_raw_cloud1/Status1
         - /lidar_1_raw_cloud1
       Splitter Ratio: 0.5
     Tree Height: 719
@@ -53,7 +54,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 1
+    - Alpha: 0.5
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 10
@@ -64,7 +65,7 @@ Visualization Manager:
       Class: rviz/PointCloud2
       Color: 138; 226; 52
       Color Transformer: Intensity
-      Decay Time: 5
+      Decay Time: 1
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
@@ -74,14 +75,14 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
+      Size (m): 0.004999999888241291
       Style: Flat Squares
       Topic: /lidar_0/livox/lidar
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-    - Alpha: 1
+    - Alpha: 0.5
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
         Max Value: 10
@@ -99,10 +100,10 @@ Visualization Manager:
       Min Color: 0; 0; 0
       Name: lidar_1_raw_cloud
       Position Transformer: XYZ
-      Queue Size: 10
+      Queue Size: 1
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
+      Size (m): 0.004999999888241291
       Style: Flat Squares
       Topic: /lidar_1/livox/lidar
       Unreliable: false
@@ -137,7 +138,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 21.782207489013672
+      Distance: 3.5880002975463867
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -145,17 +146,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 2.48640513420105
+        Y: 0.47063374519348145
+        Z: -0.27202412486076355
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.15960070490837097
+      Pitch: -0.4297972321510315
       Target Frame: <Fixed Frame>
-      Yaw: 5.108530044555664
+      Yaw: 3.4135303497314453
     Saved: ~
 Window Geometry:
   Displays:

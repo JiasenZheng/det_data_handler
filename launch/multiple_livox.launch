@@ -24,5 +24,8 @@
     <!-- <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="-0.73352792603 0 -1.57303922943 0.9063077 0 0.4226184 0 livox_1 livox_0 100" /> -->
 
     <!-- apriltag extrinsic -->
-    <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="0.708, -0.001, -1.584 0.910 -0.004 0.416 0.001 livox_0 livox_1 100" />
+    <!-- <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="0.708 -0.001 -1.584 0.910 -0.004 0.416 0.001 livox_0 livox_1 100" /> -->
+
+    <!-- stereo calibration extrinsic -->
+    <node pkg="tf" type="static_transform_publisher" name="multi_lidar_tf" args="1.23413013 -0.001 1.56333649 0.009754 -0.6556141 0.0249421 0.754621 livox_1 livox_0 100" />
 </launch>
